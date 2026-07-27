@@ -54,32 +54,31 @@ label  { font-weight:bold; display:block; font-size:13px; }
 .badge-ok  { background:#34a853; color:#fff; border-radius:4px; padding:2px 7px; font-size:12px; }
 .badge-bad { background:#ea4335; color:#fff; border-radius:4px; padding:2px 7px; font-size:12px; }
 
+/* 報告樣式緊湊化設計，防分頁與擠壓 */
 .report-chart-grid {
     display:grid; grid-template-columns:1fr 1fr;
-    gap:8px; margin-bottom:8px;
+    gap:8px; margin-bottom:10px;
 }
 .report-chart-box {
     border:1px solid #ddd; border-radius:6px;
-    padding:4px; background:#fafafa;
+    padding:6px 6px 2px 6px; background:#fafafa;
+    box-sizing: border-box;
 }
 .report-chart-box h5 { margin:0 0 2px 0; font-size:12px; color:#333; text-align:center; }
-.report-chart-container { position:relative; height:120px; width:100%; }
+.report-chart-container { position:relative; height:135px; width:100%; }
 
 @media print {
-    @page { margin: 1cm; size: A4 portrait; }
-    body { display:block; overflow:visible; background:#fff; }
+    @page { size: A4 portrait; margin: 8mm; }
+    body { display:block; overflow:visible; }
     #MapDiv { display:none !important; }
     #controlPanel { width:100% !important; height:auto !important; border:none !important; overflow:visible !important; padding:0 !important; }
     .tab-bar { display:none !important; }
     .tab-content { display:none !important; }
     #tab-report  { display:block !important; }
     .btn-report, .btn-print, .no-print { display:none !important; }
-    
-    .report-section { page-break-inside: avoid !important; margin: 0 !important; padding: 0 !important; border: none !important; }
-    .report-chart-grid { page-break-inside: avoid !important; margin-bottom: 6px !important; gap: 6px !important; }
-    .report-chart-container { height:100px !important; }
-    h2, h3, h4 { page-break-after: avoid !important; margin-top: 4px !important; margin-bottom: 4px !important; }
-    table { page-break-inside: avoid !important; margin-bottom: 6px !important; }
+    .report-section { page-break-inside:avoid; break-inside:avoid; margin-bottom:0 !important; padding:10px !important; }
+    .report-chart-grid { page-break-inside:avoid; gap:6px !important; margin-bottom:8px !important; }
+    .report-chart-container { height:125px !important; }
 }
 </style>
 </head>
@@ -88,7 +87,7 @@ label  { font-weight:bold; display:block; font-size:13px; }
 <div id="MapDiv"></div>
 
 <div id="controlPanel">
-    <h3 class="no-print">🐟 宜蘭漁港水質監測系統</h3>
+    <h3>🐟 宜蘭漁港水質監測系統</h3>
 
     <div class="tab-bar no-print">
         <button class="tab-btn active" onclick="switchTab('tab-single')">單一港口</button>
@@ -158,7 +157,7 @@ label  { font-weight:bold; display:block; font-size:13px; }
         </div>
         <button class="btn-report no-print" onclick="generateReport()">📋 產生報告</button>
         <button class="btn-print  no-print" onclick="window.print()">🖨️ 列印 / 另存 PDF</button>
-        <div id="reportContent" style="margin-top:8px;"></div>
+        <div id="reportContent" style="margin-top:10px;"></div>
     </div>
 </div>
 
@@ -192,8 +191,9 @@ var portsCoords = {
 
 var weatherIcons = { "晴":"☀️", "陰":"☁️", "雨":"🌧️" };
 
+// 丙類海域標準
 var normalRanges = {
-    ph:       { min:7.0, max:8.5,  unit:"",        label:"pH 值",       color:"#f4a300", noStd:false },
+    ph:       { min:7.0, max:8.5,  unit:"",       label:"pH 值",       color:"#f4a300", noStd:false },
     do:       { min:2.0, max:null, unit:" mg/L",  label:"溶氧量 (DO)", color:"#1a73e8", noStd:false },
     EC:       { min:null,max:null, unit:" mS/cm", label:"導電度 (EC)", color:"#34a853", noStd:true  },
     salinity: { min:null,max:null, unit:" ppt",   label:"鹽度",        color:"#9c27b0", noStd:true  }
@@ -325,7 +325,7 @@ function getYAxisConfig(dataType, smallFont) {
         salinity: { min:0,  max:50, stepSize:5   }
     };
     var c        = cfgs[dataType];
-    var fontSize = smallFont ? 9 : 12;
+    var fontSize = smallFont ? 8.5 : 12;
     return {
         min: c.min, max: c.max,
         ticks: { stepSize: c.stepSize, font:{ size: fontSize } }
@@ -354,8 +354,12 @@ function buildThresholdDatasets(cfg, values, ptColors, n) {
         tension: 0,
         order: 2
     };
-    if (cfg.min !== null) datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.min) }));
-    if (cfg.max !== null) datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.max) }));
+    if (cfg.min !== null) {
+        datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.min) }));
+    }
+    if (cfg.max !== null) {
+        datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.max) }));
+    }
     return datasets;
 }
 
@@ -366,7 +370,7 @@ function buildThresholdDatasetsSmall(cfg, values, ptColors, n) {
         borderColor: cfg.color,
         backgroundColor: cfg.color,
         pointBackgroundColor: ptColors,
-        pointRadius: 3,
+        pointRadius: 2.5,
         fill:false, tension:0.1, order:1
     }];
     if (cfg.noStd) return datasets;
@@ -380,8 +384,12 @@ function buildThresholdDatasetsSmall(cfg, values, ptColors, n) {
         tension: 0,
         order: 2
     };
-    if (cfg.min !== null) datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.min) }));
-    if (cfg.max !== null) datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.max) }));
+    if (cfg.min !== null) {
+        datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.min) }));
+    }
+    if (cfg.max !== null) {
+        datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.max) }));
+    }
     return datasets;
 }
 
@@ -400,7 +408,7 @@ function onFilterChange() {
 }
 
 function updateMainChart(portName, dataType) {
-    var rows = getPortData(portName);
+    var rows   = getPortData(portName);
     if (!rows.length) { if (mainChart) mainChart.destroy(); return; }
     var cfg      = normalRanges[dataType];
     var labels   = rows.map(function(r) { return r.year + "/" + r.month; });
@@ -425,9 +433,9 @@ function updateMainChart(portName, dataType) {
                     filter: tooltipFilter,
                     callbacks:{
                         afterBody: function(ctx) {
-                            var row   = rows[ctx[0].dataIndex];
-                            var v     = parseFloat(row[dataType]);
-                            var lines = [''];
+                            var row    = rows[ctx[0].dataIndex];
+                            var v      = parseFloat(row[dataType]);
+                            var lines  = [''];
                             if (!cfg.noStd) {
                                 lines.push('狀態: ' + (isAbnormal(dataType, v) ? '⚠️ 異常' : '✅ 正常'));
                             }
@@ -485,7 +493,6 @@ function updateCompareChart() {
         { label:portA, data:mapVals(rowsA), borderColor:'#1a73e8', backgroundColor:'#1a73e8', fill:false, tension:0.1, spanGaps:true, pointRadius:4, order:1 },
         { label:portB, data:mapVals(rowsB), borderColor:'#ea4335', backgroundColor:'#ea4335', fill:false, tension:0.1, spanGaps:true, borderDash:[5,4], pointRadius:4, order:1 }
     ];
-
     if (!cfg.noStd) {
         var redLine = { label:'__threshold__', borderColor:'#ea4335', borderWidth:1.2, borderDash:[6,4], pointRadius:0, fill:false, tension:0, order:2 };
         if (cfg.min !== null) datasets.push(Object.assign({}, redLine, { data: Array(n).fill(cfg.min) }));
@@ -530,17 +537,24 @@ function generateReport() {
         var header = document.createElement('div');
         header.innerHTML =
             '<h2 style="text-align:center;color:#1a73e8;margin:0 0 4px 0;">宜蘭漁港水質綜合監測報告</h2>' +
-            '<p style="text-align:center;color:#555;margin:0 0 6px 0;font-size:12px;">產生時間：' + new Date().toLocaleString('zh-TW') + '</p><hr style="margin:6px 0;">';
+            '<p style="text-align:center;color:#555;margin:0 0 8px 0;font-size:12px;">產生時間：' + new Date().toLocaleString('zh-TW') + '</p><hr style="margin:4px 0 12px 0;">';
         container.appendChild(header);
         container.appendChild(buildSummaryTable(ports));
         ports.forEach(function(p) { container.appendChild(buildSingleReport(p, true, chartTasks)); });
     }
 
+    // 精準算算佈局，防爆頁防壓框
     requestAnimationFrame(function() {
         chartTasks.forEach(function(task) {
             var cfg      = normalRanges[task.type];
             var values   = task.rows.map(function(r) { return parseFloat(r[task.type]); });
-            var labels   = task.rows.map(function(r) { return r.year + "/" + r.month; });
+            
+            // 簡化日期格式（例如：2026/1 -> '26/1），大幅精簡文字寬度
+            var labels   = task.rows.map(function(r) { 
+                var y = String(r.year).slice(-2);
+                return "'" + y + "/" + r.month; 
+            });
+            
             var ptColors = values.map(function(v) { return isAbnormal(task.type, v) ? '#ea4335' : cfg.color; });
 
             var c = new Chart(task.canvas.getContext('2d'), {
@@ -552,18 +566,25 @@ function generateReport() {
                 options:{
                     maintainAspectRatio:false,
                     layout: {
-                        padding: { bottom: 4, left: 2, right: 8 }
+                        padding: {
+                            bottom: 12, // 完美黃金比例 padding，確保文字不壓框也不影響折線縱橫比
+                            top: 4,
+                            left: 2,
+                            right: 8
+                        }
                     },
                     scales:{
                         x:{ 
-                            grid: { drawOnChartArea: true },
+                            grid: {
+                                drawOnChartArea: true
+                            },
                             ticks:{ 
-                                font:{ size:9 }, 
-                                maxRotation:30, 
-                                minRotation:30, 
-                                autoSkip:true, 
-                                maxTicksLimit:6,
-                                padding:2
+                                font:{ size: 8.5 }, 
+                                maxRotation: 20,  // 微傾斜 20 度即可，完全避免佔用過高空間
+                                minRotation: 0,  
+                                autoSkip: true, 
+                                maxTicksLimit: 6,
+                                padding: 2
                             } 
                         },
                         y: getYAxisConfig(task.type, true)
@@ -583,35 +604,32 @@ function generateReport() {
 function buildSingleReport(portName, isSubSection, chartTasks) {
     var rows = getPortData(portName);
     var wrap = document.createElement('div');
-    wrap.className = 'report-section';
+    wrap.className    = 'report-section';
+    wrap.style.cssText = 'margin-bottom:12px;border:1px solid #ddd;border-radius:8px;padding:10px;box-sizing:border-box;';
 
     if (isSubSection) {
-        wrap.style.cssText = 'margin-bottom:12px;border:1px solid #ddd;border-radius:6px;padding:8px;';
-        wrap.innerHTML = '<h3 style="color:#1a73e8;margin:0 0 6px 0;font-size:14px;">📍 ' + portName + '</h3>';
+        wrap.innerHTML = '<h3 style="color:#1a73e8;margin:0 0 6px 0;font-size:15px;">📍 ' + portName + '</h3>';
     } else {
-        // 單一港口：合併為單一行精簡標題，省去重複標題空間
-        wrap.style.cssText = 'margin-bottom:0;padding:0;';
         wrap.innerHTML =
-            '<div style="text-align:center;margin-bottom:6px;">' +
-            '<h2 style="display:inline-block;color:#1a73e8;margin:0;font-size:18px;">宜蘭漁港水質監測報告 - ' + portName + '</h2>' +
-            '<span style="color:#666;font-size:11px;margin-left:12px;">（產生時間：' + new Date().toLocaleString('zh-TW') + '）</span>' +
-            '</div>';
+            '<h2 style="text-align:center;color:#1a73e8;margin:0 0 2px 0;font-size:18px;">宜蘭漁港水質監測報告</h2>' +
+            '<h3 style="text-align:center;margin:0 0 2px 0;font-size:14px;">📍 ' + portName + '</h3>' +
+            '<p style="text-align:center;color:#555;margin:0 0 6px 0;font-size:11px;">產生時間：' + new Date().toLocaleString('zh-TW') + '</p><hr style="margin:4px 0 10px 0;">';
     }
 
     if (!rows.length) {
-        wrap.innerHTML += '<p style="color:#999;">此漁港尚無資料。</p>';
+        wrap.innerHTML += '<p style="color:#999;margin:0;">此漁港尚無資料。</p>';
         return wrap;
     }
 
     // 統計摘要表
     var statsDiv = document.createElement('div');
-    statsDiv.innerHTML = '<h4 style="margin:2px 0 4px 0;font-size:12px;">📊 各項目統計摘要（丙類海域標準）</h4>';
+    statsDiv.innerHTML = '<h4 style="margin:0 0 4px 0;font-size:12.5px;">📊 各項目統計摘要（丙類海域標準）</h4>';
     statsDiv.appendChild(buildStatsTable(rows));
     wrap.appendChild(statsDiv);
 
     // 趨勢圖
-    var chartTitle = document.createElement('h4');
-    chartTitle.style.cssText = 'margin:6px 0 4px 0;font-size:12px;';
+    var chartTitle      = document.createElement('h4');
+    chartTitle.style.cssText = 'margin:8px 0 4px 0;font-size:12.5px;';
     chartTitle.textContent   = '📈 各項目趨勢圖';
     wrap.appendChild(chartTitle);
 
@@ -638,7 +656,7 @@ function buildSingleReport(portName, isSubSection, chartTasks) {
 
     // 異常記錄
     var anomalyDiv = document.createElement('div');
-    anomalyDiv.innerHTML = '<h4 style="margin:6px 0 4px 0;font-size:12px;">⚠️ 異常記錄</h4>';
+    anomalyDiv.innerHTML = '<h4 style="margin:8px 0 4px 0;font-size:12.5px;">⚠️ 異常記錄</h4>';
     anomalyDiv.appendChild(buildAnomalyTable(rows));
     wrap.appendChild(anomalyDiv);
 
@@ -649,7 +667,7 @@ function buildSingleReport(portName, isSubSection, chartTasks) {
 function buildStatsTable(rows) {
     var types = ['ph','do','EC','salinity'];
     var html  =
-        '<table style="width:100%;border-collapse:collapse;font-size:10.5px;">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:11px;">' +
         '<thead><tr style="background:#1a73e8;color:#fff;">' +
         '<th style="padding:3px 4px;text-align:left;">項目</th>' +
         '<th style="padding:3px 4px;">最新值</th>' +
@@ -731,7 +749,7 @@ function buildAnomalyTable(rows) {
     }
 
     var html =
-        '<table style="width:100%;border-collapse:collapse;font-size:10.5px;">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:11px;">' +
         '<thead><tr style="background:#ea4335;color:#fff;">' +
         '<th style="padding:3px 4px;">時間</th>' +
         '<th style="padding:3px 4px;">項目</th>' +
@@ -764,16 +782,16 @@ function buildSummaryTable(ports) {
     var curM  = now.getMonth() + 1;
 
     var html =
-        '<h3 style="margin:6px 0 4px 0;font-size:14px;">📋 各漁港最新水質總覽（' + curY + ' 年 ' + curM + ' 月）</h3>' +
-        '<table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:8px;">' +
+        '<h3 style="font-size:14px;margin:0 0 6px 0;">📋 各漁港最新水質總覽（' + curY + ' 年 ' + curM + ' 月）</h3>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;">' +
         '<thead><tr style="background:#1a73e8;color:#fff;">' +
-        '<th style="padding:3px 4px;text-align:left;">漁港</th>' +
-        '<th style="padding:3px 4px;">資料月份</th>' +
-        '<th style="padding:3px 4px;">pH</th>' +
-        '<th style="padding:3px 4px;">DO (mg/L)</th>' +
-        '<th style="padding:3px 4px;">EC (mS/cm)</th>' +
-        '<th style="padding:3px 4px;">鹽度 (ppt)</th>' +
-        '<th style="padding:3px 4px;">整體狀態</th>' +
+        '<th style="padding:4px 4px;text-align:left;">漁港</th>' +
+        '<th style="padding:4px 4px;">資料月份</th>' +
+        '<th style="padding:4px 4px;">pH</th>' +
+        '<th style="padding:4px 4px;">DO (mg/L)</th>' +
+        '<th style="padding:4px 4px;">EC (mS/cm)</th>' +
+        '<th style="padding:4px 4px;">鹽度 (ppt)</th>' +
+        '<th style="padding:4px 4px;">整體狀態</th>' +
         '</tr></thead><tbody>';
 
     ports.forEach(function(port, i) {
@@ -785,6 +803,7 @@ function buildSummaryTable(ports) {
 
         var cells = types.map(function(t) {
             var v   = parseFloat(last[t]);
+            var cfg = normalRanges[t];
             if (isNaN(v)) return '<td style="padding:3px 4px;text-align:center;">-</td>';
             var bad = isAbnormal(t, v);
             if (bad) hasAnomaly = true;
