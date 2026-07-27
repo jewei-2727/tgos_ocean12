@@ -543,16 +543,15 @@ function generateReport() {
         ports.forEach(function(p) { container.appendChild(buildSingleReport(p, true, chartTasks)); });
     }
 
-    // 精準算算佈局，防爆頁防壓框
+    // 精準計算佈局，保留 2026 完整年份，防爆頁防壓框
     requestAnimationFrame(function() {
         chartTasks.forEach(function(task) {
             var cfg      = normalRanges[task.type];
             var values   = task.rows.map(function(r) { return parseFloat(r[task.type]); });
             
-            // 簡化日期格式（例如：2026/1 -> '26/1），大幅精簡文字寬度
+            // 保留 2026/1 完整年份顯示
             var labels   = task.rows.map(function(r) { 
-                var y = String(r.year).slice(-2);
-                return "'" + y + "/" + r.month; 
+                return r.year + "/" + r.month; 
             });
             
             var ptColors = values.map(function(v) { return isAbnormal(task.type, v) ? '#ea4335' : cfg.color; });
@@ -579,11 +578,11 @@ function generateReport() {
                                 drawOnChartArea: true
                             },
                             ticks:{ 
-                                font:{ size: 8.5 }, 
-                                maxRotation: 20,  // 微傾斜 20 度即可，完全避免佔用過高空間
+                                font:{ size: 7.5 }, // 👈 字型調為 7.5px，完整容納 2026/1 格式
+                                maxRotation: 25,   // 👈 微傾斜 25 度，維持極佳識別度與視覺比例
                                 minRotation: 0,  
                                 autoSkip: true, 
-                                maxTicksLimit: 6,
+                                maxTicksLimit: 6,   // 👈 防擁擠跳號顯示
                                 padding: 2
                             } 
                         },
